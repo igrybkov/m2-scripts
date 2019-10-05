@@ -1,0 +1,30 @@
+#!/bin/bash
+
+if [ ! -f "`pwd`/bin/magento" ]; then
+  echo "You're not in the magento directory"
+  exit 1
+fi
+
+BASENAME=$(basename `pwd`)
+
+if ! (echo $* | grep --quiet -E '(\s+|^)--no-ask(\s+|$)'); then
+  read -p "Are you sure (y/n)? " choice
+  case "$choice" in 
+    y|Y ) ;;
+    n|N ) exit 1;;
+    * ) echo "invalid input"; exit 1;;
+  esac
+fi
+
+echo -e "\n"
+
+mysql -e "CREATE DATABASE \`$BASENAME\`;" &> /dev/null
+
+set -e # fail on error
+
+php bin/magento setup:uninstall --no-interaction
+
+set +e # NOT fail on error
+git checkout app/etc/config.php &>/dev/null
+
+rm -rf var/*

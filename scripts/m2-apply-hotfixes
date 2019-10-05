@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [ ! -f "`pwd`/bin/magento" ]; then
+  echo "You're not in the magento directory"
+  exit 1
+fi
+
+if [ ! -d "`pwd`/m2-hotfixes" ]; then
+  echo "There is no m2-hotfixes directory"
+  exit 1
+fi
+
+for filename in m2-hotfixes/*.patch; do
+  git apply $filename;
+done

@@ -1,0 +1,24 @@
+#!/bin/bash
+
+green() { echo -e "$(tput setaf 2)$*$(tput sgr0)"; }
+cyan() { echo -e "$(tput setaf 6)$*$(tput sgr0)"; }
+
+BASENAME=$(basename `pwd`)
+
+set -e # fail on error
+
+if [ ! -f "`pwd`/bin/magento" ]; then
+  echo "You're not in the magento directory"
+  exit 1
+fi
+
+if ! (echo $* | grep --quiet -E '(\s+|^)--no-ask(\s+|$)'); then
+  read -p "Are you sure (y/n)? " choice
+  case "$choice" in 
+    y|Y ) ;;
+    n|N ) exit 1;;
+    * ) echo "invalid input"; exit 1;;
+  esac
+fi
+
+m2-reinstall $* --base-url="https://${BASENAME}.test/" --base-url-secure="https://${BASENAME}.test/"

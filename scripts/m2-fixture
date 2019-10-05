@@ -1,0 +1,24 @@
+#!/bin/bash
+
+green() { echo -e "$(tput setaf 2)$*$(tput sgr0)"; }
+
+if [ ! -f "`pwd`/bin/magento" ]; then
+  echo "You're not in the magento directory"
+  exit 1
+fi
+
+if ! (echo $* | grep --quiet -E '(\s+|^)--no-ask(\s+|$)'); then
+  read -p "Are you sure (y/n)? " choice
+  case "$choice" in 
+    y|Y ) ;;
+    n|N ) exit 1;;
+    * ) echo "invalid input"; exit 1;;
+  esac
+  echo -e "\n"
+fi
+
+
+php bin/magento setup:performance:generate-fixtures setup/performance-toolkit/profiles/ce/small.xml
+
+green "\nCleaning cache..."
+php bin/magento cache:clean

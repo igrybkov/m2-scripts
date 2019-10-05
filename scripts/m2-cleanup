@@ -1,0 +1,42 @@
+#!/bin/bash
+
+black() { echo -e "$(tput setaf 0)$*$(tput sgr0)"; }
+red() { echo -e "$(tput setaf 1)$*$(tput sgr0)"; }
+green() { echo -e "$(tput setaf 2)$*$(tput sgr0)"; }
+yellow() { echo -e "$(tput setaf 3)$*$(tput sgr0)"; }
+blue() { echo -e "$(tput setaf 4)$*$(tput sgr0)"; }
+magenta() { echo -e "$(tput setaf 5)$*$(tput sgr0)"; }
+cyan() { echo -e "$(tput setaf 6)$*$(tput sgr0)"; }
+white() { echo -e "$(tput setaf 7)$*$(tput sgr0)"; }
+
+set -e # fail on error
+
+if (echo $* | grep --quiet -E '(\s+|^)--help(\s+|$)'); then
+  echo "$0 [--generated] [--static]"
+  exit 0
+fi
+
+if [ ! -f "`pwd`/bin/magento" ]; then
+  red "You're not in the magento directory"
+  exit 1
+fi
+
+red 'Deleting "var/*"...'
+rm -rf var/*
+cyan "Done"
+
+if (echo $* | grep --quiet -E '(\s+|^)--generated(\s+|$)'); then
+  if [ -d "`pwd`/generated" ]; then
+    red 'Deleting "generated/*"...'
+    rm -rf generated/*
+    cyan "Done"
+  fi
+fi
+
+if (echo $* | grep --quiet -E '(\s+|^)--static(\s+|$)'); then
+  if [ -d "`pwd`/generated" ]; then
+    red 'Deleting "pub/static/*"...'
+    rm -rf pub/static/*
+    cyan "Done"
+  fi
+fi

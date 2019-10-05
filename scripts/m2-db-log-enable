@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ ! -f "`pwd`/bin/magento" ]; then
+  echo "You're not in the magento directory"
+  exit 1
+fi
+
+php bin/magento dev:query-log:enable --query-time-threshold=0 --include-call-stack=false --include-all-queries=true

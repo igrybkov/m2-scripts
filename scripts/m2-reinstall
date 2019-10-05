@@ -1,0 +1,91 @@
+#!/bin/bash
+
+cyan() { echo -e "$(tput setaf 6)$*$(tput sgr0)"; }
+green() { echo -e "$(tput setaf 2)$*$(tput sgr0)"; }
+red() { echo -e "$(tput setaf 1)$*$(tput sgr0)"; }
+
+BASENAME=$(basename `pwd`)
+
+if [ ! -f "`pwd`/bin/magento" ]; then
+  red "You're not in the magento directory"
+  exit 1
+fi
+
+if ! (echo $* | grep --quiet -E '(\s+|^)--no-ask(\s+|$)'); then
+  read -p "Are you sure (y/n)? " choice
+  case "$choice" in 
+    y|Y ) ;;
+    n|N ) exit 1;;
+    * ) echo "invalid input"; exit 1;;
+  esac
+  echo -e "\n"
+fi
+
+DB_PREFIX="p_"
+if (echo $* | grep --quiet -E '(\s+|^)--no-prefix(\s+|$)'); then
+  DB_PREFIX=""
+fi
+
+CONVERT_OLD_SCRIPTS=""
+if (echo $* | grep --quiet -E '(\s+|^)--convert-old-scripts(\s+|$)'); then
+  CONVERT_OLD_SCRIPTS="--convert-old-scripts=1"
+fi
+
+BASE_URL="$(echo $* | grep -oE -- '(\s+|^)--base-url=[a-zA-Z0-9\_\.\/\:\-]+(\s+|$)' | gsed -e 's/\s*$//g' | cut -d'=' -f2)"
+if [ "" == "$BASE_URL" ]; then
+  BASE_URL="http://${BASENAME}.test/"
+fi
+
+BASE_URL_SECURE="$(echo $* | grep -oE -- '(\s+|^)--base-url-secure=[a-zA-Z0-9\_\.\/\:\-]+(\s+|$)' | gsed -e 's/\s*$//g'  | cut -d'=' -f2)"
+USE_SECURE=0
+if [ "" != "$BASE_URL_SECURE" ]; then
+  USE_SECURE=1
+  BASE_URL_SECURE_PARAM="--base-url-secure=${BASE_URL_SECURE}"
+fi
+
+AMQP=""
+if (echo $* | grep --quiet -E '(\s+|^)--with-amqp(\s+|$)'); then
+  AMQP_HOST="$(echo $* | grep -oE -- '(\s+|^)--amqp-host=[a-zA-Z0-9\_\.\/\:\-]+(\s+|$)' | gsed -e 's/\s*$//g'  | cut -d'=' -f2)"
+  if [ "" == "$AMQP_HOST" ]; then
+    AMQP_HOST="127.0.0.1"
+  fi
+  AMQP_PORT="$(echo $* | grep -oE -- '(\s+|^)--amqp-port=[a-zA-Z0-9\_\.\/\:\-]+(\s+|$)' | gsed -e 's/\s*$//g'  | cut -d'=' -f2)"
+  if [ "" == "$AMQP_PORT" ]; then
+    AMQP_PORT="5672"
+  fi
+  AMQP_VIRTUALHOST="$(echo $* | grep -oE -- '(\s+|^)--amqp-virtualhost=[a-zA-Z0-9\_\.\/\:\-]+(\s+|$)' | gsed -e 's/\s*$//g'  | cut -d'=' -f2)"
+  if [ "" == "$AMQP_VIRTUALHOST" ]; then
+    AMQP_VIRTUALHOST="/${BASENAME}"
+  fi
+  AMQP_USER="$(echo $* | grep -oE -- '(\s+|^)--amqp-user=[a-zA-Z0-9\_\.\/\:\-]+(\s+|$)' | gsed -e 's/\s*$//g'  | cut -d'=' -f2)"
+  if [ "" == "$AMQP_USER" ]; then
+    AMQP_USER="${BASENAME}"
+  fi
+  AMQP_PASSWORD="$(echo $* | grep -oE -- '(\s+|^)--amqp-password=[a-zA-Z0-9\_\.\/\:\-]+(\s+|$)' | gsed -e 's/\s*$//g'  | cut -d'=' -f2)"
+  if [ "" == "$AMQP_PASSWORD" ]; then
+    AMQP_PASSWORD="123123q"
+  fi
+  rabbitmqctl add_user "${AMQP_USER}" "${AMQP_PASSWORD}" &>/dev/null
+  rabbitmqctl add_vhost "${AMQP_VIRTUALHOST}" &>/dev/null
+  rabbitmqctl set_permissions -p "${AMQP_VIRTUALHOST}" "${AMQP_USER}" ".*" ".*" ".*" &>/dev/null
+  AMQP="--amqp-host=${AMQP_HOST} --amqp-port=${AMQP_PORT} --amqp-virtualhost=${AMQP_VIRTUALHOST} --amqp-user=${AMQP_USER} --amqp-password=${AMQP_PASSWORD}"
+fi
+
+set -e # fail on error
+
+if ! (echo $* | grep --quiet -E '(\s+|^)--no-uninstall(\s+|$)'); then
+  m2-uninstall --no-ask
+fi
+echo -e "\n"
+m2-cleanup
+echo -e "\n"
+
+set -x
+php bin/magento setup:install --no-interaction $CONVERT_OLD_SCRIPTS $AMQP --db-host=127.0.0.1 --db-user=root --db-password=123123q --db-name="${BASENAME}" --db-prefix="${DB_PREFIX}" --admin-firstname=Illia --admin-lastname=Grybkov --admin-email=igrybkov@adobe.com --admin-user=admin --admin-password=123123q --base-url="${BASE_URL}" ${BASE_URL_SECURE_PARAM} --use-secure=${USE_SECURE} --admin-use-security-key=0 --backend-frontname=admin --currency=USD --cleanup-database --use-rewrites=1 --session-save=db
+set +x
+
+m2-configure
+
+echo -e "\n"
+green "Warming up the cache (in background)..."
+nohup curl "${BASE_URL}" -k -L -s > /dev/null &

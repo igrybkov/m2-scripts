@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ ! -f "`pwd`/bin/magento" ]; then
+  echo "You're not in the magento directory"
+  exit 1
+fi
+
+FILES=(var/log/debug.log var/log/exception.log var/log/system.log var/debug/db.log)
+# rm -rf ${FILES[*]}
+mkdir -p var/log var/debug
+touch ${FILES[*]}
+echo -e "${FILES}"
+tail -n 0 -F ${FILES[*]}

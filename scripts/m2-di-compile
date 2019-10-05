@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ ! -f "`pwd`/bin/magento" ]; then
+  echo "You're not in the magento directory"
+  exit 1
+fi
+
+php bin/magento setup:di:compile --no-interaction
