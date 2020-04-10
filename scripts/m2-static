@@ -5,4 +5,4 @@ if [ ! -f "`pwd`/bin/magento" ]; then
   exit 1
 fi
 
-php bin/magento setup:static-content:deploy  -f -j4 --no-interaction
+php bin/magento setup:static-content:deploy -f -j8 --no-interaction

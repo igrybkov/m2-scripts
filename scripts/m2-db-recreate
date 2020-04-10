@@ -1,0 +1,16 @@
+#!/bin/bash
+
+DB_NAME="$(m2-db-name)"
+
+if ! (echo $* | grep --quiet -E '(\s+|^)--no-ask(\s+|$)'); then
+  read -p "Recreate database ${DB_NAME}. Are you sure (y/n)? " choice
+  case "$choice" in 
+    y|Y ) ;;
+    n|N ) exit 1;;
+    * ) echo "invalid input"; exit 1;;
+  esac
+  echo -e "\n"
+fi
+
+m2-db-drop --no-ask
+m2-db-create --no-ask

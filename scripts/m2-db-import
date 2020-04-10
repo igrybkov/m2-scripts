@@ -1,0 +1,22 @@
+#!/bin/bash
+
+DB_NAME="$(m2-db-name)"
+FILE_NAME=$1
+
+if [ ! -f "${FILE_NAME}" ]; then
+  echo "Usage: ${0} db-dump.sql"
+  exit 1;
+fi
+
+if ! (echo $* | grep --quiet -E '(\s+|^)--no-ask(\s+|$)'); then
+  read -p "Recreate database ${DB_NAME} & import file '${FILE_NAME}'. Are you sure (y/n)? " choice
+  case "$choice" in 
+    y|Y ) ;;
+    n|N ) exit 1;;
+    * ) echo "invalid input"; exit 1;;
+  esac
+  echo -e "\n"
+fi
+
+m2-db-recreate --no-ask
+pv "$FILE_NAME" | mysql "$DB_NAME"

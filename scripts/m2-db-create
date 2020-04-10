@@ -1,0 +1,5 @@
+#!/bin/bash
+
+DB_NAME="$(m2-db-name)"
+
+echo "create database if not exists \`${DB_NAME}\`;" | mysql

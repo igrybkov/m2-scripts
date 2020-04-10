@@ -3,7 +3,7 @@
 green() { echo -e "$(tput setaf 2)$*$(tput sgr0)"; }
 cyan() { echo -e "$(tput setaf 6)$*$(tput sgr0)"; }
 
-BASENAME=$(basename `pwd`)
+BASENAME=$(m2-db-name)
 
 set -e # fail on error
 
