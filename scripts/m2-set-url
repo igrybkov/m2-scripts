@@ -13,7 +13,7 @@ if [ "${URL}" == "" ]; then
 fi
 
 if ! (echo $* | grep --quiet -E '(\s+|^)--no-ask(\s+|$)'); then
-  read -p "Update website URL to ${URL}'. Are you sure (y/n)? " choice
+  read -p "Update website URL to ${URL}. Are you sure (y/n)? " choice
   case "$choice" in 
     y|Y ) ;;
     n|N ) exit 1;;
