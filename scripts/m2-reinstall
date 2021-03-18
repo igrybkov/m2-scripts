@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# These are sample passwords for a dev environment.
+# Please update them according to your environment setup
+MYSQL_ROOT_PASSWORD=123123q
+ADMIN_PASSWORD=123123q
+
 cyan() { echo -e "$(tput setaf 6)$*$(tput sgr0)"; }
 green() { echo -e "$(tput setaf 2)$*$(tput sgr0)"; }
 red() { echo -e "$(tput setaf 1)$*$(tput sgr0)"; }
@@ -81,7 +86,7 @@ m2-cleanup
 echo -e "\n"
 
 set -x
-php bin/magento setup:install --no-interaction $CONVERT_OLD_SCRIPTS $AMQP --db-host=127.0.0.1 --db-user=root --db-password=123123q --db-name="${BASENAME}" --db-prefix="${DB_PREFIX}" --admin-firstname=Illia --admin-lastname=Grybkov --admin-email=igrybkov@adobe.com --admin-user=admin --admin-password=123123q --base-url="${BASE_URL}" ${BASE_URL_SECURE_PARAM} --use-secure=${USE_SECURE} --admin-use-security-key=0 --backend-frontname=admin --currency=USD --cleanup-database --use-rewrites=1 --session-save=db
+php bin/magento setup:install --no-interaction $CONVERT_OLD_SCRIPTS $AMQP --db-host=127.0.0.1 --db-user=root --db-password="${MYSQL_ROOT_PASSWORD}" --db-name="${BASENAME}" --db-prefix="${DB_PREFIX}" --admin-firstname=Illia --admin-lastname=Grybkov --admin-email=igrybkov@adobe.com --admin-user=admin --admin-password="${ADMIN_PASSWORD}" --base-url="${BASE_URL}" ${BASE_URL_SECURE_PARAM} --use-secure=${USE_SECURE} --admin-use-security-key=0 --backend-frontname=admin --currency=USD --cleanup-database --use-rewrites=1 --session-save=db
 set +x
 
 m2-configure
